@@ -1,0 +1,36 @@
+The GPS Data Logger reads standard NMEA strings from a serially connected GPS
+unit to include units connected via virtual COM ports (e.g. A Garmin eTrex
+hand held connected via USB using Franson GPS Gate Client to read the data). The
+UI displays Latitude, Longitude, Altitude, Heading, Current Speed, Average Speed
+and the current fix mode of the GPS unit. Logging is selectable to log all
+messages or to log only messages above a set speed. This feature is helpful to
+prevent extra logging when starting and stopping. All logged coordinates can be saved to KML format for viewing path in programs
+such as Google earth.
+
+Includes libraries:
+JAXB 2.2.5 (CDDL v1.1 and GPL v2) --
+    activation.jar
+    jaxb-api.jar
+    jaxb-impl.jar
+    jaxb-xjc.jar
+    jsr173_1.0_api.jar
+
+JAK Java API for KML (BSD License) --
+    JavaAPIforKml.jar
+
+    Copyright (c) 2009, Micromata GmbH
+    All rights reserved
+
+RxTx (License v 2.1 - LGPL v 2.1) --
+    RXTXcomm.jar
+
+    Copyright 1997-2007 by Trent Jarvi tjarvi@qbang.org
+
+JGps.jar
+common-utilities.jar
+
+Product Sites:
+GPS Gate Client -- http://gpsgate.com
+JAK -- http://code.google.com/p/javaapiforkml
+JAXB -- http://jaxb.java.net/
+RXTX -- http://rxtx.qbang.org/
