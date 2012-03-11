@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import util.rxtx.GpsSerialDataListener;
 import util.rxtx.RxTxUtilities;
@@ -46,6 +47,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
         mLoggedCoordinates = new ArrayList<>();
 
+        mSaveLabel.setText(" ");
+
     }
 
     /** This method is called from within the constructor to
@@ -67,6 +70,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         mLogSpeedSpinner = new javax.swing.JSpinner();
         mLogAllCheckBox = new javax.swing.JCheckBox();
         mFixModeLabel = new javax.swing.JLabel();
+        mSaveLabel = new javax.swing.JLabel();
         mMenuBar = new javax.swing.JMenuBar();
         mFileMenu = new javax.swing.JMenu();
         mClearCoordinatesMenuItem = new javax.swing.JMenuItem();
@@ -109,6 +113,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
         mFixModeLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         mFixModeLabel.setText("Fix Mode: 1");
+
+        mSaveLabel.setText("Save");
 
         mFileMenu.setText("File");
 
@@ -177,7 +183,6 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(mLogAllCheckBox, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(mLatitudeLabel)
@@ -188,20 +193,27 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                                         .addComponent(mLogAboveSpeedLabel)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(mLogSpeedSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addComponent(mFixModeLabel))
-                                .addGap(0, 175, Short.MAX_VALUE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(mSpeedLabel)
-                                .addGap(0, 0, Short.MAX_VALUE)))
+                                    .addComponent(mFixModeLabel)
+                                    .addComponent(mSpeedLabel))
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(mSaveLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(mLogAllCheckBox, javax.swing.GroupLayout.PREFERRED_SIZE, 213, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(mLogAllCheckBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(mLatitudeLabel)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap(12, Short.MAX_VALUE)
+                        .addComponent(mSaveLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(mLatitudeLabel))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(mLogAllCheckBox)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(mLongitudeLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -214,7 +226,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 .addComponent(mFixModeLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(mAverageSpeedLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(mLogAboveSpeedLabel)
                     .addComponent(mLogSpeedSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -257,9 +269,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
     private void mSaveKmlMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mSaveKmlMenuItemActionPerformed
         JFileChooser chooser = new JFileChooser();
-
-        //Will need file filter
-
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(("Keyhole Markup Language"), "kml");
+        chooser.setFileFilter(filter);
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION){
             try {
                 //Create the KML object
@@ -267,8 +278,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 Placemark placemark = kml.createAndSetPlacemark();
                 Style style = placemark.createAndAddStyle();
                 LineStyle lineStyle = style.createAndSetLineStyle();
-                lineStyle.setWidth(2.0);
-                lineStyle.setColor("ff000000");
+                lineStyle.setWidth(4.0);
+                lineStyle.setColor("7fee0000");
                 LineString linestring = placemark.createAndSetLineString();
                 //Add coordinates
                 linestring.setCoordinates(mLoggedCoordinates);
@@ -296,6 +307,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     private javax.swing.JLabel mLongitudeLabel;
     private javax.swing.JMenuBar mMenuBar;
     private javax.swing.JMenuItem mSaveKmlMenuItem;
+    private javax.swing.JLabel mSaveLabel;
     private javax.swing.JMenu mSerialPortMenu;
     private javax.swing.JLabel mSpeedLabel;
     private javax.swing.JMenuItem mStartMenuItem;
@@ -329,7 +341,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
             mAltitudeLabel.setText("Altitude: " + numberFormatter.format(DistanceConversion.metersToFeet(model.getAltitude())));
             mSpeedLabel.setText("Speed: " + model.getSpeedOverGround());
             mHeadingLabel.setText("Heading: " + model.getTrueCourse());
-            
+
             //Set fix mode
             mFixModeLabel.setText("Fix Mode: " + model.getFixMode());
 
@@ -343,7 +355,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
             if (model.getLatitudeHemisphere().equals("S")){
                 latitude = latitude * -1;
             }
-            
+
             //Log coordinate if log all or speed cut off is met
             if (mLogAllCheckBox.isSelected()){
                 logCoordinate(longitude, latitude, model.getAltitude());
@@ -360,10 +372,13 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
         }
     }
-    
-    private void logCoordinate(double longitude, double latitude, double altitude){       
+
+    private void logCoordinate(double longitude, double latitude, double altitude){
+        mSaveLabel.setText("Logging");
+        SaveTimer timer = new SaveTimer((mSaveLabel));
         Coordinate loggedCoordinate = new Coordinate(longitude, latitude, altitude);
         mLoggedCoordinates.add(loggedCoordinate);
+        timer.execute();
     }
 
     private void initAvailablePorts(){
