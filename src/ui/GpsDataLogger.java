@@ -32,6 +32,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     private double mTotalForSpeedAverage;
     private int mNumberMeasurements;
     private List<Coordinate> mLoggedCoordinates;
+    private double mLogAboveSpeed = 5;
 
     /** Creates new form GpsDataLogger */
     @SuppressWarnings("LeakingThisInConstructor")
@@ -68,6 +69,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         mLogAllCheckBox = new javax.swing.JCheckBox();
         mFixModeLabel = new javax.swing.JLabel();
         mSaveLabel = new javax.swing.JLabel();
+        mLogAboveLabel = new javax.swing.JLabel();
+        mLogAboveSpinner = new javax.swing.JSpinner();
         mMenuBar = new javax.swing.JMenuBar();
         mFileMenu = new javax.swing.JMenu();
         mClearCoordinatesMenuItem = new javax.swing.JMenuItem();
@@ -105,6 +108,15 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         mFixModeLabel.setText("Fix Mode: 1");
 
         mSaveLabel.setText("Save");
+
+        mLogAboveLabel.setText("Log Above (mph):");
+
+        mLogAboveSpinner.setModel(new javax.swing.SpinnerNumberModel(5.0d, 0.0d, 25.0d, 1.0d));
+        mLogAboveSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                mLogAboveSpinnerStateChanged(evt);
+            }
+        });
 
         mFileMenu.setText("File");
 
@@ -169,24 +181,25 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(mSaveLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(mLogAllCheckBox, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(mSaveLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(mLogAllCheckBox, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
+                            .addComponent(mAltitudeLabel)
+                            .addComponent(mAverageSpeedLabel)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addGroup(layout.createSequentialGroup()
+                                    .addComponent(mLogAboveLabel)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(mLogAboveSpinner))
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(mLatitudeLabel)
                                     .addComponent(mLongitudeLabel)
                                     .addComponent(mFixModeLabel)
-                                    .addComponent(mSpeedLabel))
-                                .addGap(0, 0, Short.MAX_VALUE)))
-                        .addContainerGap())
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(mAltitudeLabel)
-                            .addComponent(mAverageSpeedLabel))
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                                    .addComponent(mSpeedLabel))))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -194,7 +207,6 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(mSaveLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(mLatitudeLabel)
@@ -208,10 +220,12 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                         .addComponent(mFixModeLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(mAverageSpeedLabel)
-                        .addGap(63, 63, 63))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(mLogAllCheckBox)
-                        .addContainerGap())))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(mLogAboveLabel)
+                            .addComponent(mLogAboveSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(mLogAllCheckBox))
+                .addContainerGap(22, Short.MAX_VALUE))
         );
 
         pack();
@@ -272,6 +286,10 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         }
     }//GEN-LAST:event_mSaveKmlMenuItemActionPerformed
 
+    private void mLogAboveSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_mLogAboveSpinnerStateChanged
+        mLogAboveSpeed = (double) mLogAboveSpinner.getValue();
+    }//GEN-LAST:event_mLogAboveSpinnerStateChanged
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel mAltitudeLabel;
@@ -281,6 +299,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     private javax.swing.JMenu mFileMenu;
     private javax.swing.JLabel mFixModeLabel;
     private javax.swing.JLabel mLatitudeLabel;
+    private javax.swing.JLabel mLogAboveLabel;
+    private javax.swing.JSpinner mLogAboveSpinner;
     private javax.swing.JCheckBox mLogAllCheckBox;
     private javax.swing.JLabel mLongitudeLabel;
     private javax.swing.JMenuBar mMenuBar;
@@ -336,9 +356,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
             }
 
             //Log coordinate if log all or speed cut off is met
-            if (mLogAllCheckBox.isSelected()){
-                logCoordinate(longitude, latitude, model.getAltitude());
-            } else if ( speed >= 5){
+            if (mLogAllCheckBox.isSelected() || speed >= mLogAboveSpeed){
                 logCoordinate(longitude, latitude, model.getAltitude());
             }
 
