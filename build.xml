@@ -71,4 +71,15 @@
     nbproject/build-impl.xml file. 
 
     -->
+    
+    <target depends="distZipClean,compile,jar" name="distZip">
+        <mkdir dir="distZip"/>
+        <delete file="dist/README.TXT"/>
+        <zip destfile="distZip/GpsDataLogger.zip" basedir="dist"/>
+    </target>
+    
+    <target depends="clean" name="distZipClean">
+        <delete dir="distZip"/>
+    </target>
+    
 </project>
