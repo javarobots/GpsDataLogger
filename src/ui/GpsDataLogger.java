@@ -95,21 +95,20 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         setResizable(false);
 
         mLatitudeLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        mLatitudeLabel.setText("Latitude: 000.00 N");
+        mLatitudeLabel.setText("Latitude: 00.0000 N");
 
         mLongitudeLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        mLongitudeLabel.setText("Longitude: 000.00 W");
+        mLongitudeLabel.setText("Longitude: 000.0000 W");
 
         mSpeedLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         mSpeedLabel.setText("Speed: 00.0");
 
         mAltitudeLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        mAltitudeLabel.setText("Altitude: 5500");
+        mAltitudeLabel.setText("Altitude: 0");
 
         mAverageSpeedLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         mAverageSpeedLabel.setText("Average Speed: 0");
 
-        mLogAllCheckBox.setSelected(true);
         mLogAllCheckBox.setText("Log All");
         mLogAllCheckBox.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
 
@@ -324,27 +323,31 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         if (o instanceof GpsDataModel){
 
             GpsDataModel model = (GpsDataModel)o;
+            
+            //Create number formatter preventing decimals
+            NumberFormat numberFormatter = NumberFormat.getNumberInstance(); 
+            numberFormatter.setMaximumFractionDigits(4);
 
             //Build latitude
-            StringBuilder latitudeBuilder = new StringBuilder(Double.toString(model.getLatitude()));
+            StringBuilder latitudeBuilder = new StringBuilder(numberFormatter.format(model.getLatitude()));
+            latitudeBuilder.deleteCharAt(1);
             latitudeBuilder.insert(2, " ");
 
             //Build longitude
-            StringBuilder longitudeBuilder = new StringBuilder(Double.toString(model.getLongitude()));
+            StringBuilder longitudeBuilder = new StringBuilder(numberFormatter.format(model.getLongitude()));
+            longitudeBuilder.deleteCharAt(2);
             longitudeBuilder.insert(3, " ");
 
             //Set Latitude and longitude labels
             mLatitudeLabel.setText("Latitude: " + latitudeBuilder.toString() + " " + model.getLatitudeHemisphere());
             mLongitudeLabel.setText("Longitude: " + longitudeBuilder.toString() + " " + model.getLongitudeHemispere());
 
-            //Create number formatter preventing decimals
-            NumberFormat numberFormatter = NumberFormat.getNumberInstance();
             numberFormatter.setMaximumFractionDigits(0);
 
             //Set altitude and speed
             mAltitudeLabel.setText("Altitude: " + numberFormatter.format(DistanceConversion.metersToFeet(model.getAltitude())));
             numberFormatter.setMaximumFractionDigits(2);
-            double speed = model.getSpeedOverGround() / 1.15077945;
+            double speed = model.getSpeedOverGround() * 1.15077945;
             mSpeedLabel.setText("Speed: " + numberFormatter.format(speed));
 
             //Set fix mode
