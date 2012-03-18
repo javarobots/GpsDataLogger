@@ -8,7 +8,6 @@ import gps.calculations.DistanceConversion;
 import gps.calculations.NavigationCalculations;
 import gps.data.GpsDataModel;
 import gps.nmea.SentenceParser;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -347,7 +346,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
             //Set altitude and speed
             mAltitudeLabel.setText("Altitude: " + numberFormatter.format(DistanceConversion.metersToFeet(model.getAltitude())));
             numberFormatter.setMaximumFractionDigits(2);
-            double speed = model.getSpeedOverGround() * 1.15077945;
+            double speed = model.getSpeedOverGround() * .621371192;
             mSpeedLabel.setText("Speed: " + numberFormatter.format(speed));
 
             //Set fix mode
