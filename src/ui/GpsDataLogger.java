@@ -322,55 +322,58 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         if (o instanceof GpsDataModel){
 
             GpsDataModel model = (GpsDataModel)o;
-            
+
             //Create number formatter preventing decimals
-            NumberFormat numberFormatter = NumberFormat.getNumberInstance(); 
+            NumberFormat numberFormatter = NumberFormat.getNumberInstance();
             numberFormatter.setMaximumFractionDigits(4);
 
+            //Get coordinate
+            gps.data.Coordinate coordinate = model.getGGACoordinate();
+
             //Build latitude
-            StringBuilder latitudeBuilder = new StringBuilder(numberFormatter.format(model.getLatitude()));
+            StringBuilder latitudeBuilder = new StringBuilder(numberFormatter.format(coordinate.getLatitude()));
             latitudeBuilder.deleteCharAt(1);
             latitudeBuilder.insert(2, " ");
 
             //Build longitude
-            StringBuilder longitudeBuilder = new StringBuilder(numberFormatter.format(model.getLongitude()));
+            StringBuilder longitudeBuilder = new StringBuilder(numberFormatter.format(coordinate.getLongitude()));
             longitudeBuilder.deleteCharAt(2);
             longitudeBuilder.insert(3, " ");
 
             //Set Latitude and longitude labels
-            mLatitudeLabel.setText("Latitude: " + latitudeBuilder.toString() + " " + model.getLatitudeHemisphere());
-            mLongitudeLabel.setText("Longitude: " + longitudeBuilder.toString() + " " + model.getLongitudeHemispere());
+            mLatitudeLabel.setText("Latitude: " + latitudeBuilder.toString() + " " + coordinate.getLatitudeHemisphere().getHemisphere());
+            mLongitudeLabel.setText("Longitude: " + longitudeBuilder.toString() + " " + coordinate.getLongitudeHemisphere().getHemisphere());
 
             numberFormatter.setMaximumFractionDigits(0);
 
             //Set altitude and speed
-            mAltitudeLabel.setText("Altitude: " + numberFormatter.format(DistanceConversion.metersToFeet(model.getAltitude())));
+            mAltitudeLabel.setText("Altitude: " + numberFormatter.format(DistanceConversion.metersToFeet(model.getGGAHeightAboveSeaLevel())));
             numberFormatter.setMaximumFractionDigits(2);
-            double speed = model.getSpeedOverGround() * .621371192;
+            double speed = model.getVTGSpeedInKilometers() * .621371192;
             mSpeedLabel.setText("Speed: " + numberFormatter.format(speed));
 
             //Set fix mode
-            mFixModeLabel.setText("Fix Mode: " + model.getFixMode());
+            mFixModeLabel.setText("Fix Mode: " + model.getGsaFixMode());
 
             //Set up lat and lon for logging
             NavigationCalculations navCalc = NavigationCalculations.getInstance();
             double longitude = navCalc.degreesMinutesToDegrees(longitudeBuilder.toString());
             double latitude = navCalc.degreesMinutesToDegrees(latitudeBuilder.toString());
-            if (model.getLongitudeHemispere().equals("W")){
+            if (coordinate.getLongitudeHemisphere().getHemisphere().equals("W")){
                 longitude = longitude * -1;
             }
-            if (model.getLatitudeHemisphere().equals("S")){
+            if (coordinate.getLatitudeHemisphere().getHemisphere().equals("S")){
                 latitude = latitude * -1;
             }
 
             //Log coordinate if log all or speed cut off is met
             if (mLogAllCheckBox.isSelected() || speed >= mLogAboveSpeed){
-                logCoordinate(longitude, latitude, model.getAltitude());
+                logCoordinate(longitude, latitude, model.getGGAHeightAboveSeaLevel());
             }
 
             //Perform averaging
             mNumberMeasurements++;
-            mTotalForSpeedAverage += model.getSpeedOverGround();
+            mTotalForSpeedAverage += speed;
             double speedAverage = mTotalForSpeedAverage/mNumberMeasurements;
             mAverageSpeedLabel.setText("Average Speed: " + numberFormatter.format(speedAverage));
 
