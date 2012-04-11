@@ -43,6 +43,11 @@
             <Property name="text" type="java.lang.String" value="Tools"/>
           </Properties>
           <SubComponents>
+            <Menu class="javax.swing.JMenu" name="mNMEASentenceMenu">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="NMEA Sentences"/>
+              </Properties>
+            </Menu>
             <Menu class="javax.swing.JMenu" name="mSerialPortMenu">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Serial Port"/>

@@ -7,6 +7,8 @@ import gnu.io.SerialPort;
 import gps.calculations.DistanceConversion;
 import gps.calculations.NavigationCalculations;
 import gps.data.GpsDataModel;
+import gps.nmea.NmeaSentences;
+import gps.nmea.SelectedSentences;
 import gps.nmea.SentenceParser;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
@@ -45,6 +47,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         initAvailablePorts();
 
         GpsDataModel dataModel = new GpsDataModel();
+        dataModel.setSelectedSentences(new SelectedSentences());
         mParser = new SentenceParser(dataModel);
         dataModel.addObserver(this);
 
@@ -58,6 +61,18 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
         }
         this.setIconImage(image);
+        
+        //Init the NMEA Sentence menu and sentenced to parse
+        SelectedSentences selectedSentences = dataModel.getSelectedSentences();
+        selectedSentences.setParseGGA(true);
+        selectedSentences.setParseGSA(true);
+        selectedSentences.setParseVTG(true);
+        selectedSentences.setParseRMC(false);
+        for (NmeaSentences sentence : EnumSet.allOf(NmeaSentences.class)){
+            JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem(sentence.toString());            
+            menuItem.setSelected(selectedSentences.isParse(sentence));
+            mNMEASentenceMenu.add(menuItem);
+        }
     }
 
     /** This method is called from within the constructor to
@@ -85,6 +100,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         mSaveKmlMenuItem = new javax.swing.JMenuItem();
         mExitMenuItem = new javax.swing.JMenuItem();
         mToolsMenu = new javax.swing.JMenu();
+        mNMEASentenceMenu = new javax.swing.JMenu();
         mSerialPortMenu = new javax.swing.JMenu();
         mStartMenuItem = new javax.swing.JMenuItem();
         mStopMenuItem = new javax.swing.JMenuItem();
@@ -155,6 +171,9 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         mMenuBar.add(mFileMenu);
 
         mToolsMenu.setText("Tools");
+
+        mNMEASentenceMenu.setText("NMEA Sentences");
+        mToolsMenu.add(mNMEASentenceMenu);
 
         mSerialPortMenu.setText("Serial Port");
         mToolsMenu.add(mSerialPortMenu);
@@ -308,6 +327,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     private javax.swing.JCheckBox mLogAllCheckBox;
     private javax.swing.JLabel mLongitudeLabel;
     private javax.swing.JMenuBar mMenuBar;
+    private javax.swing.JMenu mNMEASentenceMenu;
     private javax.swing.JMenuItem mSaveKmlMenuItem;
     private javax.swing.JLabel mSaveLabel;
     private javax.swing.JMenu mSerialPortMenu;
