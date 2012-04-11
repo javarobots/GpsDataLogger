@@ -61,7 +61,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
         }
         this.setIconImage(image);
-        
+
         //Init the NMEA Sentence menu and sentenced to parse
         SelectedSentences selectedSentences = dataModel.getSelectedSentences();
         selectedSentences.setParseGGA(true);
@@ -69,7 +69,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         selectedSentences.setParseVTG(true);
         selectedSentences.setParseRMC(false);
         for (NmeaSentences sentence : EnumSet.allOf(NmeaSentences.class)){
-            JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem(sentence.toString());            
+            JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem(sentence.toString());
             menuItem.setSelected(selectedSentences.isParse(sentence));
             mNMEASentenceMenu.add(menuItem);
         }
@@ -341,6 +341,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     public void update(Observable o, Object arg) {
         if (o instanceof GpsDataModel){
 
+            System.out.println("Update Data Logger");
+
             GpsDataModel model = (GpsDataModel)o;
 
             //Create number formatter preventing decimals
@@ -387,8 +389,9 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
             }
 
             //Log coordinate if log all or speed cut off is met
-            if (mLogAllCheckBox.isSelected() || speed >= mLogAboveSpeed){
+            if ((mLogAllCheckBox.isSelected() || speed >= mLogAboveSpeed) && model.isLogCoordinate()){
                 logCoordinate(longitude, latitude, model.getGGAHeightAboveSeaLevel());
+                model.setLogCoordinate(false);
             }
 
             //Perform averaging
