@@ -95,6 +95,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         mSaveLabel = new javax.swing.JLabel();
         mLogAboveLabel = new javax.swing.JLabel();
         mLogAboveSpinner = new javax.swing.JSpinner();
+        mFixIconLabel = new javax.swing.JLabel();
         mMenuBar = new javax.swing.JMenuBar();
         mFileMenu = new javax.swing.JMenu();
         mClearCoordinatesMenuItem = new javax.swing.JMenuItem();
@@ -130,9 +131,10 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         mLogAllCheckBox.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
 
         mFixModeLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        mFixModeLabel.setText("Fix Mode: 1");
+        mFixModeLabel.setText("Fix Mode:");
 
-        mSaveLabel.setText("Save");
+        mSaveLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/gps-icon.png"))); // NOI18N
+        mSaveLabel.setEnabled(false);
 
         mLogAboveLabel.setText("Log Above (mph):");
 
@@ -142,6 +144,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 mLogAboveSpinnerStateChanged(evt);
             }
         });
+
+        mFixIconLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/redBall.png"))); // NOI18N
 
         mFileMenu.setText("File");
 
@@ -217,22 +221,25 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(mSaveLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 92, Short.MAX_VALUE)
+                        .addComponent(mSaveLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(mLogAllCheckBox))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(mLongitudeLabel)
                             .addComponent(mAltitudeLabel)
                             .addComponent(mSpeedLabel)
-                            .addComponent(mFixModeLabel)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(mFixModeLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(mFixIconLabel))
                             .addComponent(mAverageSpeedLabel)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(mLogAboveLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(mLogAboveSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(mLatitudeLabel))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 121, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -251,7 +258,9 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(mSpeedLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(mFixModeLabel)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(mFixIconLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(mFixModeLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(mAverageSpeedLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -334,6 +343,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     private javax.swing.JCheckBoxMenuItem mConsoleDebugOutputCheckBoxMenuItem;
     private javax.swing.JMenuItem mExitMenuItem;
     private javax.swing.JMenu mFileMenu;
+    private javax.swing.JLabel mFixIconLabel;
     private javax.swing.JLabel mFixModeLabel;
     private javax.swing.JLabel mLatitudeLabel;
     private javax.swing.JLabel mLogAboveLabel;
@@ -359,46 +369,66 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
             GpsDataModel model = (GpsDataModel) o;
 
-            //Get coordinate
-            gps.data.Coordinate coordinate = model.getGGACoordinate();
-            String latitudeString = numberFormatter.formatLatitudeValue(coordinate.getLatitude(), 4);
-            String longitudeString = numberFormatter.formatLongitudeValue(coordinate.getLongitude(), 4);
-
-            //Set Latitude and longitude labels
-            mLatitudeLabel.setText("Latitude: " + latitudeString + " " + coordinate.getLatitudeHemisphere().getHemisphere());
-            mLongitudeLabel.setText("Longitude: " + longitudeString + " " + coordinate.getLongitudeHemisphere().getHemisphere());
-
-            //Set altitude and speed
-            mAltitudeLabel.setText("Altitude: " + numberFormatter.formatValue(DistanceConversion.metersToFeet(model.getGGAHeightAboveSeaLevel()),0));
-            double speed = model.getVTGSpeedInKilometers() * .621371192;
-            mSpeedLabel.setText("Speed: " + numberFormatter.formatValue(speed,2));
-
             //Set fix mode
-            mFixModeLabel.setText("Fix Mode: " + model.getGsaFixMode());
-
-            //Set up lat and lon for logging
-            NavigationCalculations navCalc = NavigationCalculations.getInstance();
-            double longitude = navCalc.degreesMinutesToDegrees(latitudeString);
-            double latitude = navCalc.degreesMinutesToDegrees(longitudeString);
-            if (coordinate.getLongitudeHemisphere().getHemisphere().equals("W")) {
-                longitude = longitude * -1;
+            int fixMode = model.getGsaFixMode();
+            ImageIcon fixIcon = null;
+            switch (fixMode){
+                case 1:
+                    fixIcon = new ImageIcon(getClass().getResource("/images/redBall.png"));
+                    break;
+                case 2:
+                    fixIcon = new ImageIcon(getClass().getResource("/images/yellowBall.png"));
+                    break;
+                case 3:
+                    fixIcon = new ImageIcon(getClass().getResource("/images/greenBall.png"));
+                    break;
+                default:
+                    fixIcon = new ImageIcon(getClass().getResource("/images/redBall.png"));
+                    break;
             }
-            if (coordinate.getLatitudeHemisphere().getHemisphere().equals("S")) {
-                latitude = latitude * -1;
-            }
+            mFixIconLabel.setIcon(fixIcon);
 
-            //Log coordinate if log all or speed cut off is met
-            if ((mLogAllCheckBox.isSelected() || speed >= mLogAboveSpeed) && model.isLogCoordinate()) {
-                Debug.debugOut("Coordinate logged");
-                logCoordinate(longitude, latitude, model.getGGAHeightAboveSeaLevel());
-                model.setLogCoordinate(false);
-            }
+            if (fixMode > 1){
 
-            //Perform averaging
-            mNumberMeasurements++;
-            mTotalForSpeedAverage += speed;
-            double speedAverage = mTotalForSpeedAverage / mNumberMeasurements;
-            mAverageSpeedLabel.setText("Average Speed: " + numberFormatter.formatValue(speedAverage,2));
+                //Get coordinate
+                gps.data.Coordinate coordinate = model.getGGACoordinate();
+                String latitudeString = numberFormatter.formatLatitudeValue(coordinate.getLatitude(), 4);
+                String longitudeString = numberFormatter.formatLongitudeValue(coordinate.getLongitude(), 4);
+
+                //Set Latitude and longitude labels
+                mLatitudeLabel.setText("Latitude: " + latitudeString + " " + coordinate.getLatitudeHemisphere().getHemisphere());
+                mLongitudeLabel.setText("Longitude: " + longitudeString + " " + coordinate.getLongitudeHemisphere().getHemisphere());
+
+                //Set altitude and speed
+                mAltitudeLabel.setText("Altitude: " + numberFormatter.formatValue(DistanceConversion.metersToFeet(model.getGGAHeightAboveSeaLevel()),0));
+                double speed = model.getVTGSpeedInKilometers() * .621371192;
+                mSpeedLabel.setText("Speed: " + numberFormatter.formatValue(speed,2));
+
+                //Set up lat and lon for logging
+                NavigationCalculations navCalc = NavigationCalculations.getInstance();
+                double longitude = navCalc.degreesMinutesToDegrees(latitudeString);
+                double latitude = navCalc.degreesMinutesToDegrees(longitudeString);
+                if (coordinate.getLongitudeHemisphere().getHemisphere().equals("W")) {
+                    longitude = longitude * -1;
+                }
+                if (coordinate.getLatitudeHemisphere().getHemisphere().equals("S")) {
+                    latitude = latitude * -1;
+                }
+
+                //Log coordinate if log all or speed cut off is met
+                if ((mLogAllCheckBox.isSelected() || speed >= mLogAboveSpeed) && model.isLogCoordinate()) {
+                    Debug.debugOut("Coordinate logged");
+                    logCoordinate(longitude, latitude, model.getGGAHeightAboveSeaLevel());
+                    model.setLogCoordinate(false);
+                }
+
+                //Perform averaging
+                mNumberMeasurements++;
+                mTotalForSpeedAverage += speed;
+                double speedAverage = mTotalForSpeedAverage / mNumberMeasurements;
+                mAverageSpeedLabel.setText("Average Speed: " + numberFormatter.formatValue(speedAverage,2));
+
+            }
 
         }
     }
@@ -406,7 +436,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
 
     private void logCoordinate(double longitude, double latitude, double altitude) {
-        mSaveLabel.setText("Logging");
+        mSaveLabel.setEnabled(true);
         SaveTimer timer = new SaveTimer((mSaveLabel));
         Coordinate loggedCoordinate = new Coordinate(longitude, latitude, altitude);
         mLoggedCoordinates.add(loggedCoordinate);

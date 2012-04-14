@@ -24,7 +24,7 @@ public class SaveTimer extends SwingWorker<Boolean,Boolean> {
 
     @Override
     public void done(){
-        mLabel.setText(" ");
+        mLabel.setEnabled(false);
     }
 
 }

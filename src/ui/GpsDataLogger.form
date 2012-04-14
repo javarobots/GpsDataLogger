@@ -111,8 +111,8 @@
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
-                      <Component id="mSaveLabel" min="-2" pref="136" max="-2" attributes="0"/>
-                      <EmptySpace pref="92" max="32767" attributes="0"/>
+                      <Component id="mSaveLabel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                       <Component id="mLogAllCheckBox" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" attributes="0">
@@ -120,7 +120,11 @@
                           <Component id="mLongitudeLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="mAltitudeLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="mSpeedLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="mFixModeLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="mFixModeLabel" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="mFixIconLabel" min="-2" max="-2" attributes="0"/>
+                          </Group>
                           <Component id="mAverageSpeedLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="mLogAboveLabel" min="-2" max="-2" attributes="0"/>
@@ -129,7 +133,7 @@
                           </Group>
                           <Component id="mLatitudeLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <EmptySpace min="0" pref="121" max="32767" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -153,7 +157,10 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="mSpeedLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="mFixModeLabel" min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                  <Component id="mFixIconLabel" max="32767" attributes="0"/>
+                  <Component id="mFixModeLabel" max="32767" attributes="0"/>
+              </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="mAverageSpeedLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
@@ -218,12 +225,15 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Tahoma" size="14" style="1"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Fix Mode: 1"/>
+        <Property name="text" type="java.lang.String" value="Fix Mode:"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="mSaveLabel">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Save"/>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/images/gps-icon.png"/>
+        </Property>
+        <Property name="enabled" type="boolean" value="false"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="mLogAboveLabel">
@@ -240,6 +250,13 @@
       <Events>
         <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="mLogAboveSpinnerStateChanged"/>
       </Events>
+    </Component>
+    <Component class="javax.swing.JLabel" name="mFixIconLabel">
+      <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/images/redBall.png"/>
+        </Property>
+      </Properties>
     </Component>
   </SubComponents>
 </Form>
