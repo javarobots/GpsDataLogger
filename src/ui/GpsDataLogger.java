@@ -1,6 +1,7 @@
 package ui;
 
 import commonutilities.swing.ComponentPosition;
+import data.StopCoordinate;
 import de.micromata.opengis.kml.v_2_2_0.*;
 import gnu.io.SerialPort;
 import gps.calculations.DistanceConversion;
@@ -36,7 +37,9 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     private double mTotalForSpeedAverage;
     private int mNumberMeasurements;
     private List<Coordinate> mLoggedCoordinates;
+    private List<StopCoordinate> mLoggedStopCoordinates;
     private double mLogAboveSpeed = 5;
+    private boolean mLogStopPlacemark = true;
 
     /**
      * Creates new form GpsDataLogger
@@ -54,6 +57,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         dataModel.addObserver(this);
 
         mLoggedCoordinates = new ArrayList<>();
+        mLoggedStopCoordinates = new ArrayList<>();
 
         mSaveLabel.setText(" ");
         BufferedImage image = null;
@@ -312,15 +316,26 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
             try {
                 //Create the KML object
                 Kml kml = new Kml();
+                                
                 Placemark placemark = kml.createAndSetPlacemark();
-                Style style = placemark.createAndAddStyle();
-                LineStyle lineStyle = style.createAndSetLineStyle();
+                Style pathStyle = placemark.createAndAddStyle();
+                LineStyle lineStyle = pathStyle.createAndSetLineStyle();
                 lineStyle.setWidth(4.0);
                 lineStyle.setColor("7fee0000");
                 LineString linestring = placemark.createAndSetLineString();
-                //Add coordinates
+                //Add coordinates for path
                 linestring.setCoordinates(mLoggedCoordinates);
-
+                
+                //Add stop coordinates
+                for (StopCoordinate coordinate : mLoggedStopCoordinates){
+                    Placemark stopMark = kml.createAndSetPlacemark();                    
+                    Point stopPoint = stopMark.createAndSetPoint();
+                    List<Coordinate> stopCoordinates = new ArrayList<>();                    
+                    stopCoordinates.add(new Coordinate(coordinate.getLongitude(), coordinate.getLatitude(), 0));
+                    stopPoint.setCoordinates(stopCoordinates);
+                }
+                
+                //Marshal the KML document
                 kml.marshal(chooser.getSelectedFile());
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(GpsDataLogger.class.getName()).log(Level.SEVERE, null, ex);
@@ -371,7 +386,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
             //Set fix mode
             int fixMode = model.getGsaFixMode();
-            ImageIcon fixIcon = null;
+            ImageIcon fixIcon;
             switch (fixMode){
                 case 1:
                     fixIcon = new ImageIcon(getClass().getResource("/images/redBall.png"));
@@ -406,8 +421,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
                 //Set up lat and lon for logging
                 NavigationCalculations navCalc = NavigationCalculations.getInstance();
-                double longitude = navCalc.degreesMinutesToDegrees(latitudeString);
-                double latitude = navCalc.degreesMinutesToDegrees(longitudeString);
+                double longitude = navCalc.degreesMinutesToDegrees(longitudeString);
+                double latitude = navCalc.degreesMinutesToDegrees(latitudeString);
                 if (coordinate.getLongitudeHemisphere().getHemisphere().equals("W")) {
                     longitude = longitude * -1;
                 }
@@ -417,9 +432,25 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
                 //Log coordinate if log all or speed cut off is met
                 if ((mLogAllCheckBox.isSelected() || speed >= mLogAboveSpeed) && model.isLogCoordinate()) {
-                    Debug.debugOut("Coordinate logged");
+                    Debug.debugOut("Motion Coordinate Logged");
                     logCoordinate(longitude, latitude, model.getGGAHeightAboveSeaLevel());
                     model.setLogCoordinate(false);
+                    
+                    //Device being tracked is in motion
+                    if (speed >= mLogAboveSpeed){
+                        mLogStopPlacemark = true;
+                    }
+                }
+                
+                //Determine if we should log a "Not in motion" placemark
+                if (mLogStopPlacemark && (speed <= mLogAboveSpeed) && (fixMode > 1)){
+                    Debug.debugOut("Stopped Coordinate Logged");
+                    StopCoordinate stopCoordinate = new StopCoordinate();
+                    stopCoordinate.markStopTime();
+                    stopCoordinate.setLatitude(latitude);
+                    stopCoordinate.setLongitude(longitude);
+                    mLoggedStopCoordinates.add(stopCoordinate);
+                    mLogStopPlacemark = false;
                 }
 
                 //Perform averaging
