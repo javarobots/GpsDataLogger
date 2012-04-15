@@ -298,6 +298,10 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     private void mStopMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mStopMenuItemActionPerformed
         mStartMenuItem.setEnabled(true);
         mStopMenuItem.setEnabled(false);
+
+        //Change fix icon to red ball
+        ImageIcon fixIcon = new ImageIcon(getClass().getResource("/images/redBall.png"));
+        mFixIconLabel.setIcon(fixIcon);
         mSerialPort.close();
     }//GEN-LAST:event_mStopMenuItemActionPerformed
 
@@ -305,10 +309,12 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         int clearResponse = JOptionPane.showConfirmDialog(this, "Do you wish to clear all logged coordinates?", "Clear Coordinates", JOptionPane.YES_NO_OPTION);
         if (clearResponse == JOptionPane.YES_OPTION) {
             mLoggedCoordinates.clear();
+            mLoggedStopCoordinates.clear();
         }
     }//GEN-LAST:event_mClearCoordinatesMenuItemActionPerformed
 
     private void mSaveKmlMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mSaveKmlMenuItemActionPerformed
+        int stopCoordinateIndex = 0;
         JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(("Keyhole Markup Language"), "kml");
         chooser.setFileFilter(filter);
@@ -316,8 +322,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
             try {
                 //Create the KML object
                 Kml kml = new Kml();
-                                
-                Placemark placemark = kml.createAndSetPlacemark();
+                Document kmlDocument = kml.createAndSetDocument();
+                Placemark placemark = kmlDocument.createAndAddPlacemark();
                 Style pathStyle = placemark.createAndAddStyle();
                 LineStyle lineStyle = pathStyle.createAndSetLineStyle();
                 lineStyle.setWidth(4.0);
@@ -325,16 +331,20 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 LineString linestring = placemark.createAndSetLineString();
                 //Add coordinates for path
                 linestring.setCoordinates(mLoggedCoordinates);
-                
+
                 //Add stop coordinates
                 for (StopCoordinate coordinate : mLoggedStopCoordinates){
-                    Placemark stopMark = kml.createAndSetPlacemark();                    
+                    Placemark stopMark = kmlDocument.createAndAddPlacemark();
+                    TimeStamp timeStamp = new TimeStamp();
+                    timeStamp.setWhen(coordinate.getStopTime());
+                    stopMark.withName(Integer.toString(++stopCoordinateIndex));
+                    stopMark.withTimePrimitive(timeStamp);
                     Point stopPoint = stopMark.createAndSetPoint();
-                    List<Coordinate> stopCoordinates = new ArrayList<>();                    
+                    List<Coordinate> stopCoordinates = new ArrayList<>();
                     stopCoordinates.add(new Coordinate(coordinate.getLongitude(), coordinate.getLatitude(), 0));
                     stopPoint.setCoordinates(stopCoordinates);
                 }
-                
+
                 //Marshal the KML document
                 kml.marshal(chooser.getSelectedFile());
             } catch (FileNotFoundException ex) {
@@ -435,13 +445,13 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                     Debug.debugOut("Motion Coordinate Logged");
                     logCoordinate(longitude, latitude, model.getGGAHeightAboveSeaLevel());
                     model.setLogCoordinate(false);
-                    
+
                     //Device being tracked is in motion
                     if (speed >= mLogAboveSpeed){
                         mLogStopPlacemark = true;
                     }
                 }
-                
+
                 //Determine if we should log a "Not in motion" placemark
                 if (mLogStopPlacemark && (speed <= mLogAboveSpeed) && (fixMode > 1)){
                     Debug.debugOut("Stopped Coordinate Logged");
@@ -460,7 +470,6 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 mAverageSpeedLabel.setText("Average Speed: " + numberFormatter.formatValue(speedAverage,2));
 
             }
-
         }
     }
 
