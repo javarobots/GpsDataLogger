@@ -308,8 +308,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     private void mClearCoordinatesMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mClearCoordinatesMenuItemActionPerformed
         int clearResponse = JOptionPane.showConfirmDialog(this, "Do you wish to clear all logged coordinates?", "Clear Coordinates", JOptionPane.YES_NO_OPTION);
         if (clearResponse == JOptionPane.YES_OPTION) {
-            mLoggedCoordinates.clear();
-            mLoggedStopCoordinates.clear();
+            clearLoggerLists();
         }
     }//GEN-LAST:event_mClearCoordinatesMenuItemActionPerformed
 
@@ -473,7 +472,18 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         }
     }
 
+    public List<Coordinate> getLoggedCoordinates() {
+        return mLoggedCoordinates;
+    }
 
+    public List<StopCoordinate> getLoggedStopCoordinates() {
+        return mLoggedStopCoordinates;
+    }
+
+    public void clearLoggerLists(){
+        mLoggedCoordinates.clear();
+        mLoggedStopCoordinates.clear();
+    }
 
     private void logCoordinate(double longitude, double latitude, double altitude) {
         mSaveLabel.setEnabled(true);
