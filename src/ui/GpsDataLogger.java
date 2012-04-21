@@ -1,6 +1,7 @@
 package ui;
 
 import commonutilities.swing.ComponentPosition;
+import data.DataCoordinate;
 import data.StopCoordinate;
 import de.micromata.opengis.kml.v_2_2_0.*;
 import gnu.io.SerialPort;
@@ -12,6 +13,7 @@ import gps.nmea.NmeaSentences;
 import gps.nmea.SelectedSentences;
 import gps.nmea.SentenceParser;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
@@ -36,10 +38,11 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     private SentenceParser mParser;
     private double mTotalForSpeedAverage;
     private int mNumberMeasurements;
-    private List<Coordinate> mLoggedCoordinates;
+    private List<DataCoordinate> mLoggedCoordinates;
     private List<StopCoordinate> mLoggedStopCoordinates;
     private double mLogAboveSpeed = 5;
     private boolean mLogStopPlacemark = true;
+    private NumberFormating numberFormatter;
 
     /**
      * Creates new form GpsDataLogger
@@ -58,6 +61,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
 
         mLoggedCoordinates = new ArrayList<>();
         mLoggedStopCoordinates = new ArrayList<>();
+        numberFormatter = new NumberFormating();
 
         mSaveLabel.setText(" ");
         BufferedImage image = null;
@@ -322,30 +326,66 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 //Create the KML object
                 Kml kml = new Kml();
                 Document kmlDocument = kml.createAndSetDocument();
+
+                //Create the stopSign style
+                kmlDocument.createAndAddStyle()
+                        .withId("stopSign")
+                        .createAndSetIconStyle()
+                        .withScale(.75)
+                        .createAndSetIcon()
+                        .withHref("http://www.cfwebapps.com/stopSign.png");
+
                 Placemark placemark = kmlDocument.createAndAddPlacemark();
                 Style pathStyle = placemark.createAndAddStyle();
                 LineStyle lineStyle = pathStyle.createAndSetLineStyle();
                 lineStyle.setWidth(4.0);
                 lineStyle.setColor("7fee0000");
                 LineString linestring = placemark.createAndSetLineString();
-                //Add coordinates for path
-                linestring.setCoordinates(mLoggedCoordinates);
+
+                //Set up extended data
+                ExtendedData extendedData = null;
+                boolean firstStop = true;
 
                 //Add stop coordinates
                 for (StopCoordinate coordinate : mLoggedStopCoordinates){
                     Placemark stopMark = kmlDocument.createAndAddPlacemark();
+                    if (firstStop){
+                        stopMark.withId("Starting Potint");
+                        extendedData = stopMark.createAndSetExtendedData();
+                        firstStop = false;
+                    }
                     TimeStamp timeStamp = new TimeStamp();
                     timeStamp.setWhen(coordinate.getStopTime());
                     stopMark.withName(Integer.toString(++stopCoordinateIndex));
                     stopMark.withTimePrimitive(timeStamp);
+                    stopMark.withStyleUrl("#stopSign");
                     Point stopPoint = stopMark.createAndSetPoint();
                     List<Coordinate> stopCoordinates = new ArrayList<>();
                     stopCoordinates.add(new Coordinate(coordinate.getLongitude(), coordinate.getLatitude(), 0));
                     stopPoint.setCoordinates(stopCoordinates);
                 }
 
+                //Add coordinates for path
+                String label = "Coordinate ";
+                int labelIndex = 1;
+                List<Coordinate> jakCoordinates = new ArrayList<>();
+                for (DataCoordinate dataCoordinate : mLoggedCoordinates){
+                    jakCoordinates.add(convertGpsCoordinateToJakCoordinate(dataCoordinate));
+                    extendedData.addToData(KmlFactory.createData(Double.toString(dataCoordinate.getSpeed())).withName(label + labelIndex++));
+                }
+                linestring.setCoordinates(jakCoordinates);
+
+
+
                 //Marshal the KML document
-                kml.marshal(chooser.getSelectedFile());
+                String saveName = chooser.getSelectedFile().getName();
+                if (saveName.substring(saveName.length() - 4).equals(".kml")){
+                    kml.marshal(chooser.getSelectedFile());
+                } else {
+                    saveName = saveName + ".kml";
+                    File saveFile = new File(chooser.getSelectedFile().getParentFile(), saveName);
+                    kml.marshal(saveFile);
+                }
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(GpsDataLogger.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -388,7 +428,6 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
     @Override
     public void update(Observable o, Object arg) {
         if (o instanceof GpsDataModel) {
-            NumberFormating numberFormatter = new NumberFormating();
             Debug.debugOut("Update Data Logger");
 
             GpsDataModel model = (GpsDataModel) o;
@@ -429,20 +468,14 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                 mSpeedLabel.setText("Speed: " + numberFormatter.formatValue(speed,2));
 
                 //Set up lat and lon for logging
-                NavigationCalculations navCalc = NavigationCalculations.getInstance();
-                double longitude = navCalc.degreesMinutesToDegrees(longitudeString);
-                double latitude = navCalc.degreesMinutesToDegrees(latitudeString);
-                if (coordinate.getLongitudeHemisphere().getHemisphere().equals("W")) {
-                    longitude = longitude * -1;
-                }
-                if (coordinate.getLatitudeHemisphere().getHemisphere().equals("S")) {
-                    latitude = latitude * -1;
-                }
+                DataCoordinate logCoordinate = new DataCoordinate(coordinate);
+                logCoordinate.setSpeed(speed);
+                logCoordinate.setElevation(model.getGGAHeightAboveSeaLevel());
 
                 //Log coordinate if log all or speed cut off is met
                 if ((mLogAllCheckBox.isSelected() || speed >= mLogAboveSpeed) && model.isLogCoordinate()) {
                     Debug.debugOut("Motion Coordinate Logged");
-                    logCoordinate(longitude, latitude, model.getGGAHeightAboveSeaLevel());
+                    logCoordinate(logCoordinate);
                     model.setLogCoordinate(false);
 
                     //Device being tracked is in motion
@@ -456,8 +489,8 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
                     Debug.debugOut("Stopped Coordinate Logged");
                     StopCoordinate stopCoordinate = new StopCoordinate();
                     stopCoordinate.markStopTime();
-                    stopCoordinate.setLatitude(latitude);
-                    stopCoordinate.setLongitude(longitude);
+                    stopCoordinate.setLatitude(logCoordinate.getLatitude());
+                    stopCoordinate.setLongitude(logCoordinate.getLongitude());
                     mLoggedStopCoordinates.add(stopCoordinate);
                     mLogStopPlacemark = false;
                 }
@@ -472,7 +505,7 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         }
     }
 
-    public List<Coordinate> getLoggedCoordinates() {
+    public List<DataCoordinate> getLoggedCoordinates() {
         return mLoggedCoordinates;
     }
 
@@ -485,14 +518,29 @@ public class GpsDataLogger extends javax.swing.JFrame implements Observer {
         mLoggedStopCoordinates.clear();
     }
 
-    private void logCoordinate(double longitude, double latitude, double altitude) {
+    private void logCoordinate(DataCoordinate logCoordinate) {
         mSaveLabel.setEnabled(true);
         SaveTimer timer = new SaveTimer((mSaveLabel));
-        Coordinate loggedCoordinate = new Coordinate(longitude, latitude, altitude);
-        mLoggedCoordinates.add(loggedCoordinate);
+        mLoggedCoordinates.add(logCoordinate);
         timer.execute();
     }
 
+    private de.micromata.opengis.kml.v_2_2_0.Coordinate convertGpsCoordinateToJakCoordinate(DataCoordinate coordinate){
+        NavigationCalculations navCalc = NavigationCalculations.getInstance();
+        StringBuilder dataLongitude = new StringBuilder(Double.toString(coordinate.getLongitude()));
+        StringBuilder dataLatitude = new StringBuilder(Double.toString(coordinate.getLatitude()));
+        dataLongitude.insert(3, " ");
+        dataLatitude.insert(2, " ");
+        double longitude = navCalc.degreesMinutesToDegrees(dataLongitude.toString());
+        double latitude = navCalc.degreesMinutesToDegrees(dataLatitude.toString());
+        if (coordinate.getLongitudeHemisphere().getHemisphere().equals("W")) {
+            longitude = longitude * -1;
+        }
+        if (coordinate.getLatitudeHemisphere().getHemisphere().equals("S")) {
+            latitude = latitude * -1;
+        }
+        return new Coordinate(longitude,latitude,coordinate.getElevation());
+    }
     private void initAvailablePorts() {
         List<String> availablePorts = RxTxUtilities.getAvailablePorts();
         ButtonGroup comButtonGroup = new ButtonGroup();
